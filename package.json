@@ -1,0 +1,31 @@
+{
+  "name": "websocket-http-comparison",
+  "version": "1.0.0",
+  "description": "Compare performance between websocket and ordinary http request.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcofanch/websocket-http-comparison.git"
+  },
+  "keywords": [
+    "websocket",
+    "http",
+    "benchmark",
+    "comparison"
+  ],
+  "author": "Marco Fan <fanch_-dev@yahoo.com.hk>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marcofanch/websocket-http-comparison/issues"
+  },
+  "homepage": "https://github.com/marcofanch/websocket-http-comparison#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}

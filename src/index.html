@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Benchmark</title>
+</head>
+
+<body>
+  <div>
+    <div><label>Message count: <input id="count" type="number" value="1" /></label></div>
+    <div>Message size: 
+      <label><input name="message-size" type="radio" value="0" />Tiny</label>
+      <label><input name="message-size" type="radio" value="1" />Small</label>
+      <label><input name="message-size" type="radio" value="2" checked />Medium</label>
+      <label><input name="message-size" type="radio" value="3" />Large</label>
+      <label><input name="message-size" type="radio" value="4" />Huge</label>
+    </div>
+    <input id="testButton" type="button" value="Test" />
+  </div>
+
+  <div id="logArea"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  <script>
+    function randomString() {
+      return Math.random().toString(16).substr(2);
+    }
+
+    function generateString(repeat = 1) {
+      const parts = [];
+
+      for (let i = 0; i < repeat; i++) {
+        parts.push(randomString());
+      }
+
+      return parts.join('');
+    }
+
+    function logMessage(message) {
+      const logArea = document.getElementById('logArea');
+      logArea.innerHTML = `${message}<br />${logArea.innerHTML}`
+    }
+
+    const messages = [
+      generateString(),
+      generateString(10),
+      generateString(100),
+      generateString(1000),
+      generateString(5000),
+    ];
+
+    async function sendThroughHttp(payload, attempts = 1) {
+      for (let i = 0; i < attempts; i++) {
+        // logMessage(`Send request #${i}: `, payload);
+
+        const response = await fetch('/request', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload),
+        });
+
+        // logMessage(`Got response #${i}: `, response);
+      }
+    }
+
+    function sendThroughSocket(payload, attempts) {
+      return new Promise((resolve) => {
+        // logMessage('Establish websocket connection');
+        
+        const socket = io.connect('http://localhost:3000');
+        let count = 0;
+
+        socket.on('message', (message) => {
+          // logMessage('Got message: ', message);
+          count++;
+
+          if (count >= attempts) {
+            resolve();
+          }
+        });
+
+        for (let i = 0; i < attempts; i++) {
+          // logMessage(`Send message #${i}: `, payload);
+          socket.send(payload);
+        }
+
+        socket.on('disconnect', resolve);
+      });
+    }
+
+    function init() {
+      const testButton = document.querySelector('#testButton');
+      testButton.addEventListener('click', async () => {
+        const attempts = parseInt(document.querySelector('#count').value, 10);
+        const messageToSend = messages[document.querySelector('input[name=message-size]:checked').value];
+        const payload = { data: messageToSend };
+
+        logMessage('Send through HTTP');
+        const httpStart = Date.now();
+        await sendThroughHttp(payload, attempts);
+        const httpEnd = Date.now();
+
+        logMessage('Send through WebSocket');
+        const socketStart = Date.now();
+        await sendThroughSocket(payload, attempts);
+        const socketEnd = Date.now();
+
+        logMessage(`Time spent on HTTP request: ${httpEnd - httpStart}`);
+        logMessage(`Time spent on WebSocket request: ${socketEnd - socketStart}`);
+      });
+    }
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+
+</html>
